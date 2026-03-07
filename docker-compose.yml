@@ -19,7 +19,7 @@ services:
     container_name: ai-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root123456
-      MYSQL_DATABASE: seckill
+      MYSQL_DATABASE: medibuddy
       TZ: Asia/Shanghai
     ports:
       - "3310:3306"

@@ -11,7 +11,7 @@ interface ChatMessage {
 }
 
 const copy = {
-  appName: "小康（MediBuddy）医疗助手",
+  appName: "小康医疗助手",
   assistantName: "小康助手",
   userName: "患者",
   systemName: "系统提醒",

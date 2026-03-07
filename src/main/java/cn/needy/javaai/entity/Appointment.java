@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 /**
  * @program: java-ai-langchain4j
  * @description:
@@ -21,8 +24,9 @@ public class Appointment {
     private Long id;             // 主键ID
     private String username;     // 用户名
     private String idCard;       // 身份证号
+    private String phone;        // 手机号
     private String department;   // 科室
-    private String date;         // 就诊日期（建议后续改为 LocalDate）
-    private String time;         // 就诊时间（建议后续改为 LocalTime）
+    private LocalDate date;      // 就诊日期（建议后续改为 LocalDate）
+    private LocalTime time;      // 就诊时间（建议后续改为 LocalTime）
     private String doctorName;   // 医生姓名
 }
