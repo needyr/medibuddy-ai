@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongodb/mongodb-community-server:8.0.20-rc0-ubi9
+    container_name: ai-mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root          # 默认管理员账号
+      MONGO_INITDB_ROOT_PASSWORD: 123456  # 默认管理员密码
+      # MONGO_INITDB_DATABASE: mydatabase       # 可选：启动时自动创建的默认数据库
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db                   # 数据持久化，防止容器重启后数据丢失
+
+  mysql:
+    image: mysql:8.0
+    container_name: ai-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: seckill
+      TZ: Asia/Shanghai
+    ports:
+      - "3310:3306"
+    command: ["--default-authentication-plugin=mysql_native_password"]
+    volumes:
+      - ./conf/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+  redis:
+    image: redis/redis-stack:7.2.0-v20
+    container_name: ai-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+      - "8001:8001"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mongodb_data:
+  mysql_data:
+  redis_data:
