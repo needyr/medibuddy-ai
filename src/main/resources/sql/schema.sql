@@ -1,4 +1,4 @@
-CREATE TABLE `appointment_records` (
+CREATE TABLE `appointment` (
                                        `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
                                        `username` VARCHAR(50) NOT NULL COMMENT '用户名',
                                        `id_card` VARCHAR(18) DEFAULT NULL COMMENT '身份证号',

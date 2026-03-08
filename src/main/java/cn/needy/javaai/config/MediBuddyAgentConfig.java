@@ -37,13 +37,14 @@ public class MediBuddyAgentConfig {
                 .minScore(0.8)
                 .build();
 
-        return query -> {
-            System.out.println("开始执行 RAG 检索，query = " + query.text());
-            var contents = delegate.retrieve(query);
-            System.out.println("RAG 检索结果数量 = " + contents.size());
-            System.out.println("RAG 检索结果 = " + contents);
-            return contents;
-        };
+        // return query -> {
+        //     System.out.println("开始执行 RAG 检索，query = " + query.text());
+        //     var contents = delegate.retrieve(query);
+        //     System.out.println("RAG 检索结果数量 = " + contents.size());
+        //     System.out.println("RAG 检索结果 = " + contents);
+        //     return contents;
+        // };
+        return delegate;
     }
 
 }

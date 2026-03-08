@@ -27,10 +27,16 @@ public class AppointmentServiceImpl extends ServiceImpl<AppointmentMapper, Appoi
         LambdaQueryWrapper<Appointment> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Appointment::getUsername, appointment.getUsername())
                 .eq(Appointment::getIdCard, appointment.getIdCard())
-                .eq(Appointment::getDepartment, appointment.getDepartment())
+                .eq(Appointment::getPhone, appointment.getPhone())
                 .eq(Appointment::getDate, appointment.getDate())
-                .eq(Appointment::getTime, appointment.getTime())
-                .eq(Appointment::getDoctorName, appointment.getDoctorName());
+                .eq(Appointment::getTime, appointment.getTime());
+
+        if (appointment.getDepartment() != null && !appointment.getDepartment().isBlank()) {
+            queryWrapper.eq(Appointment::getDepartment, appointment.getDepartment());
+        }
+        if (appointment.getDoctorName() != null && !appointment.getDoctorName().isBlank()) {
+            queryWrapper.eq(Appointment::getDoctorName, appointment.getDoctorName());
+        }
         return baseMapper.selectOne(queryWrapper);
     }
 }
