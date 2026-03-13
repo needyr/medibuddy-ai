@@ -1,6 +1,6 @@
-package cn.needy.javaai.service.impl;
+package cn.needy.medibuddy.service.impl;
 
-import cn.needy.javaai.service.FileUploadService;
+import cn.needy.medibuddy.service.FileUploadService;
 import dev.langchain4j.community.store.embedding.redis.RedisEmbeddingStore;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.parser.TextDocumentParser;

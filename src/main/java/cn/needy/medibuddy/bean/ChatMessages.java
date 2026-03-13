@@ -1,4 +1,4 @@
-package cn.needy.javaai.bean;
+package cn.needy.medibuddy.bean;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package cn.needy;
+package cn.needy.medibuddy;
 
 /**
  * @program: java-ai-langchain4j

@@ -1,4 +1,4 @@
-package cn.needy.javaai.service;
+package cn.needy.medibuddy.service;
 
 import org.springframework.web.multipart.MultipartFile;
 

@@ -1,7 +1,7 @@
-package cn.needy.javaai.tools;
+package cn.needy.medibuddy.tools;
 
-import cn.needy.javaai.entity.Appointment;
-import cn.needy.javaai.service.AppointmentService;
+import cn.needy.medibuddy.entity.Appointment;
+import cn.needy.medibuddy.service.AppointmentService;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import lombok.RequiredArgsConstructor;

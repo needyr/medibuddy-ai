@@ -1,6 +1,6 @@
-package cn.needy;
+package cn.needy.medibuddy;
 
-import cn.needy.javaai.assistant.SeparateChatAssistant;
+import cn.needy.medibuddy.ai.assistant.SeparateChatAssistant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

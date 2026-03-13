@@ -1,7 +1,7 @@
-package cn.needy;
+package cn.needy.medibuddy;
 
-import cn.needy.javaai.entity.Appointment;
-import cn.needy.javaai.mapper.AppointmentMapper;
+import cn.needy.medibuddy.entity.Appointment;
+import cn.needy.medibuddy.mapper.AppointmentMapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

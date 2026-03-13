@@ -1,6 +1,6 @@
-package cn.needy.javaai.store;
+package cn.needy.medibuddy.store;
 
-import cn.needy.javaai.bean.ChatMessages;
+import cn.needy.medibuddy.bean.ChatMessages;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageDeserializer;
 import dev.langchain4j.data.message.ChatMessageSerializer;
