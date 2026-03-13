@@ -5,13 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * @program: java-ai-langchain4j
- * @description: Redis向量存储
- * @author: yeguobingfen
- * @create: 2026-03-08 00:53
- **/
-
+// Redis 向量存储配置
 @Configuration
 public class RedisEmbeddingStoreConfig {
     @Value("${langchain4j.community.redis.host}")
@@ -29,6 +23,7 @@ public class RedisEmbeddingStoreConfig {
     @Value("${langchain4j.community.redis.prefix}")
     private String prefix;
 
+    // 创建 Redis 向量存储实例（供 RAG 检索使用）
     @Bean
     public RedisEmbeddingStore store() {
         return RedisEmbeddingStore.builder()

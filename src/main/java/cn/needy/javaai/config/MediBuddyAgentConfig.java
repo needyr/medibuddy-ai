@@ -10,7 +10,6 @@ import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 @Configuration
 @RequiredArgsConstructor
@@ -19,6 +18,8 @@ public class MediBuddyAgentConfig {
     private final MongoChatMemoryStore mongoChatMemoryStore;
     private final EmbeddingModel embeddingModel;
     private final RedisEmbeddingStore store;
+
+    // 对话记忆提供器：基于 Mongo 持久化，窗口大小 30 条
     @Bean
     public ChatMemoryProvider mediBuddyChatMemoryProvider() {
         return memoryId -> MessageWindowChatMemory.builder()
@@ -28,25 +29,15 @@ public class MediBuddyAgentConfig {
                 .build();
     }
 
+    // RAG 检索器：向量检索 + 置信度过滤
     @Bean
     public ContentRetriever mediBuddyContentRetriever() {
-        ContentRetriever delegate = EmbeddingStoreContentRetriever.builder()
+        return EmbeddingStoreContentRetriever.builder()
                 .embeddingModel(embeddingModel)
                 .embeddingStore(store)
                 .maxResults(1)
                 .minScore(0.8)
                 .build();
-
-        // return query -> {
-        //     System.out.println("开始执行 RAG 检索，query = " + query.text());
-        //     var contents = delegate.retrieve(query);
-        //     System.out.println("RAG 检索结果数量 = " + contents.size());
-        //     System.out.println("RAG 检索结果 = " + contents);
-        //     return contents;
-        // };
-        return delegate;
     }
 
 }
-
-

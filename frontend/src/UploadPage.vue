@@ -35,6 +35,8 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const supportText = computed(() => supportedExtensions.join("、"));
 const selectedFileName = computed(() => selectedFile.value?.name ?? "未选择文件");
 
+const tokenKey = "medibuddy:token";
+
 function goBack(): void {
   window.location.hash = "#/chat";
 }
@@ -83,6 +85,23 @@ function onDrop(event: DragEvent): void {
   chooseFile(event.dataTransfer?.files?.[0] ?? null);
 }
 
+function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem(tokenKey);
+  if (!token) {
+    return {};
+  }
+  return { Authorization: `Bearer ${token}` };
+}
+
+function handleUnauthorized(): void {
+  localStorage.removeItem(tokenKey);
+  localStorage.removeItem("medibuddy:expiresAt");
+  localStorage.removeItem("medibuddy:userId");
+  localStorage.removeItem("medibuddy:username");
+  errorText.value = "登录已过期，请重新登录。";
+  window.location.hash = "#/login";
+}
+
 async function uploadFile(): Promise<void> {
   if (!selectedFile.value || uploading.value) {
     return;
@@ -97,8 +116,14 @@ async function uploadFile(): Promise<void> {
 
     const response = await fetch("/v1/medibuddy/upload", {
       method: "POST",
+      headers: { ...getAuthHeaders() },
       body: formData
     });
+
+    if (response.status === 401) {
+      handleUnauthorized();
+      return;
+    }
 
     if (!response.ok) {
       throw new Error(`上传失败：${response.status}`);

@@ -550,6 +550,74 @@ button {
   }
 }
 
+.login-page-shell {
+  min-height: 100vh;
+  padding: 24px;
+  display: grid;
+  place-items: center;
+}
+
+.login-card {
+  width: min(520px, 100%);
+  padding: 32px;
+  border-radius: 28px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(236, 248, 245, 0.88));
+  box-shadow: 0 24px 80px rgba(21, 54, 61, 0.12);
+}
+
+.login-header h1 {
+  margin: 14px 0 12px;
+  font-size: clamp(28px, 4vw, 38px);
+}
+
+.login-header p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.login-form {
+  margin-top: 24px;
+  display: grid;
+  gap: 14px;
+}
+
+.login-label {
+  font-weight: 700;
+}
+
+.login-input {
+  width: 100%;
+  border: 1px solid rgba(25, 123, 114, 0.2);
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--text);
+  outline: none;
+}
+
+.login-input:focus {
+  border-color: rgba(25, 123, 114, 0.5);
+  box-shadow: 0 0 0 5px rgba(25, 123, 114, 0.08);
+}
+
+.login-submit {
+  width: 100%;
+  margin-top: 6px;
+}
+
+@media (max-width: 720px) {
+  .login-page-shell {
+    padding: 12px;
+  }
+
+  .login-card {
+    padding: 20px;
+    border-radius: 22px;
+  }
+}
+
 .upload-page-shell {
   min-height: 100vh;
   padding: 24px;

@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 
 type Role = "assistant" | "user" | "system";
 
@@ -26,6 +26,8 @@ const copy = {
   quickAsk: "快捷提问",
   quickAskHint: "适合首轮问诊",
   online: "服务在线",
+  socketConnecting: "连接中",
+  socketOffline: "连接断开",
   thinking: "医疗助手思考中",
   typing: "正在整理回答",
   composerLabel: "描述您的问题",
@@ -53,6 +55,10 @@ const memoryId = ref(String(Date.now()));
 const input = ref("");
 const loading = ref(false);
 const errorText = ref("");
+const wsConnected = ref(false);
+const wsConnecting = ref(false);
+const wsError = ref("");
+const ws = ref<WebSocket | null>(null);
 
 const initialMessages = (): ChatMessage[] => [
   { id: 1, role: "assistant", text: copy.welcome, timestamp: formatTime(new Date()) },
@@ -64,6 +70,25 @@ const messages = ref<ChatMessage[]>(initialMessages());
 const canSend = computed(() => input.value.trim().length > 0 && !loading.value);
 const conversationCount = computed(() => messages.value.filter((item) => item.role !== "system").length);
 const renderedMessages = computed(() => messages.value.map((message) => ({ ...message, html: renderMarkdown(message.text) })));
+
+const wsEndpointDisplay = computed(() => {
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+  const host = window.location.hostname || "localhost";
+  const port = "9000";
+  return `${protocol}://${host}:${port}`;
+});
+
+const wsStatusText = computed(() => {
+  if (wsConnected.value) {
+    return copy.online;
+  }
+  if (wsConnecting.value) {
+    return copy.socketConnecting;
+  }
+  return copy.socketOffline;
+});
+
+const tokenKey = "medibuddy:token";
 
 function formatTime(date: Date): string {
   return new Intl.DateTimeFormat("zh-CN", { hour: "2-digit", minute: "2-digit" }).format(date);
@@ -170,9 +195,97 @@ function goToUploadPage(): void {
   window.location.hash = "#/upload";
 }
 
+function handleUnauthorized(): void {
+  localStorage.removeItem(tokenKey);
+  localStorage.removeItem("medibuddy:expiresAt");
+  localStorage.removeItem("medibuddy:userId");
+  localStorage.removeItem("medibuddy:username");
+  errorText.value = "登录已过期，请重新登录。";
+  window.location.hash = "#/login";
+}
+
+function buildWsUrl(): string {
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+  const host = window.location.hostname || "localhost";
+  const port = "9000";
+  const token = localStorage.getItem(tokenKey) || "";
+  return `${protocol}://${host}:${port}?token=${encodeURIComponent(token)}`;
+}
+
+function connectWebSocket(): void {
+  if (wsConnecting.value || wsConnected.value) {
+    return;
+  }
+  const token = localStorage.getItem(tokenKey);
+  if (!token) {
+    handleUnauthorized();
+    return;
+  }
+
+  wsConnecting.value = true;
+  wsError.value = "";
+
+  const socket = new WebSocket(buildWsUrl());
+  ws.value = socket;
+
+  socket.onopen = () => {
+    wsConnected.value = true;
+    wsConnecting.value = false;
+  };
+
+  socket.onmessage = (event) => {
+    let payload: { memoryId?: number; assistantMessage?: string; error?: string } | null = null;
+    try {
+      payload = JSON.parse(event.data);
+    } catch {
+      payload = null;
+    }
+
+    if (!payload) {
+      pushMessage("system", "收到无法解析的服务端消息。");
+      loading.value = false;
+      return;
+    }
+
+    if (payload.error) {
+      pushMessage("system", payload.error);
+      loading.value = false;
+      return;
+    }
+
+    if (payload.assistantMessage) {
+      pushMessage("assistant", payload.assistantMessage);
+      loading.value = false;
+    }
+  };
+
+  socket.onclose = (event) => {
+    wsConnected.value = false;
+    wsConnecting.value = false;
+    if (loading.value) {
+      loading.value = false;
+    }
+    if (event.code === 1008 || event.reason === "Unauthorized") {
+      handleUnauthorized();
+    }
+  };
+
+  socket.onerror = () => {
+    wsError.value = "WebSocket 连接失败，请稍后重试。";
+    wsConnected.value = false;
+    wsConnecting.value = false;
+  };
+}
+
 async function sendMessage(): Promise<void> {
   const userMessage = input.value.trim();
   if (!userMessage || loading.value) {
+    return;
+  }
+
+  if (!wsConnected.value) {
+    connectWebSocket();
+    errorText.value = "连接尚未建立，请稍后重试。";
     return;
   }
 
@@ -182,22 +295,10 @@ async function sendMessage(): Promise<void> {
   loading.value = true;
 
   try {
-    const response = await fetch("/v1/medibuddy/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ memoryId: Number(memoryId.value), userMessage })
-    });
-
-    if (!response.ok) {
-      throw new Error(`请求失败: ${response.status}`);
-    }
-
-    const text = await response.text();
-    pushMessage("assistant", text || "当前未返回内容，请稍后重试。");
+    ws.value?.send(JSON.stringify({ memoryId: Number(memoryId.value), userMessage }));
   } catch (error) {
-    errorText.value = error instanceof Error ? error.message : "请求失败，请稍后重试。";
-    pushMessage("assistant", copy.fallback);
-  } finally {
+    errorText.value = error instanceof Error ? error.message : "发送失败，请稍后重试。";
+    pushMessage("system", "消息发送失败，请稍后重试。");
     loading.value = false;
   }
 }
@@ -216,6 +317,11 @@ onMounted(() => {
   if (messageViewport.value) {
     messageViewport.value.scrollTop = messageViewport.value.scrollHeight;
   }
+  connectWebSocket();
+});
+
+onUnmounted(() => {
+  ws.value?.close();
 });
 </script>
 
@@ -241,7 +347,7 @@ onMounted(() => {
         </article>
         <article>
           <span>{{ copy.endpoint }}</span>
-          <strong>/v1/medibuddy/chat</strong>
+          <strong>{{ wsEndpointDisplay }}</strong>
         </article>
       </div>
 
@@ -273,7 +379,7 @@ onMounted(() => {
           <button class="ghost-btn ghost-btn-light" type="button" @click="goToUploadPage">上传文件</button>
           <div class="header-state" :class="{ busy: loading }">
             <span class="state-dot"></span>
-            {{ loading ? copy.thinking : copy.online }}
+            {{ loading ? copy.thinking : wsStatusText }}
           </div>
         </div>
       </header>
@@ -325,6 +431,7 @@ onMounted(() => {
         />
         <div class="composer-actions">
           <p v-if="errorText" class="error-text">{{ errorText }}</p>
+          <p v-else-if="wsError" class="error-text">{{ wsError }}</p>
           <span v-else class="tip-text">{{ copy.composerHint }}</span>
           <button class="send-btn" type="button" :disabled="!canSend" @click="sendMessage">
             {{ loading ? copy.sending : copy.send }}
