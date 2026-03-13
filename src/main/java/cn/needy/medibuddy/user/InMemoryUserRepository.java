@@ -1,4 +1,4 @@
-package cn.needy.javaai.user;
+package cn.needy.medibuddy.user;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

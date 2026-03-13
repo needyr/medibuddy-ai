@@ -1,4 +1,4 @@
-package cn.needy.javaai.security;
+package cn.needy.medibuddy.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

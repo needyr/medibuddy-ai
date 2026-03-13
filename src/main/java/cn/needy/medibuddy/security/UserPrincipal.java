@@ -1,4 +1,4 @@
-package cn.needy.javaai.security;
+package cn.needy.medibuddy.security;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package cn.needy.javaai.user;
+package cn.needy.medibuddy.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

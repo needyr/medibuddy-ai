@@ -1,4 +1,4 @@
-package cn.needy.javaai.security;
+package cn.needy.medibuddy.security;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

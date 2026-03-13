@@ -1,6 +1,6 @@
-package cn.needy.javaai.security;
+package cn.needy.medibuddy.security;
 
-import cn.needy.javaai.user.UserAccount;
+import cn.needy.medibuddy.user.UserAccount;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

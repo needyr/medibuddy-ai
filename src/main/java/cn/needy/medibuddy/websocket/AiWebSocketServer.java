@@ -1,8 +1,8 @@
-package cn.needy.javaai.websocket;
+package cn.needy.medibuddy.websocket;
 
-import cn.needy.javaai.assistant.MediBuddyAgent;
-import cn.needy.javaai.bean.ChatForm;
-import cn.needy.javaai.security.JwtService;
+import cn.needy.medibuddy.assistant.MediBuddyAgent;
+import cn.needy.medibuddy.bean.ChatForm;
+import cn.needy.medibuddy.security.JwtService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
