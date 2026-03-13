@@ -1,6 +1,6 @@
-package cn.needy.javaai.service;
+package cn.needy.medibuddy.service;
 
-import cn.needy.javaai.entity.Appointment;
+import cn.needy.medibuddy.entity.Appointment;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.stereotype.Service;
 

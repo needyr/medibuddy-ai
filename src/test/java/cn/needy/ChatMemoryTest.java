@@ -1,8 +1,8 @@
-package cn.needy;
+package cn.needy.medibuddy;
 
-import cn.needy.javaai.assistant.Assistant;
-import cn.needy.javaai.assistant.MemoryChatAssistant;
-import cn.needy.javaai.assistant.SeparateChatAssistant;
+import cn.needy.medibuddy.ai.assistant.Assistant;
+import cn.needy.medibuddy.ai.assistant.MemoryChatAssistant;
+import cn.needy.medibuddy.ai.assistant.SeparateChatAssistant;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.service.AiServices;

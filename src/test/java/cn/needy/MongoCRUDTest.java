@@ -1,6 +1,6 @@
-package cn.needy;
+package cn.needy.medibuddy;
 
-import cn.needy.javaai.bean.ChatMessages;
+import cn.needy.medibuddy.bean.ChatMessages;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,6 +1,6 @@
-package cn.needy.javaai.config;
+package cn.needy.medibuddy.config;
 
-import cn.needy.javaai.store.MongoChatMemoryStore;
+import cn.needy.medibuddy.store.MongoChatMemoryStore;
 import dev.langchain4j.community.store.embedding.redis.RedisEmbeddingStore;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;

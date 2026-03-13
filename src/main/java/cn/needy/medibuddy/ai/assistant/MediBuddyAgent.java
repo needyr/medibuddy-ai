@@ -1,4 +1,4 @@
-package cn.needy.javaai.assistant;
+package cn.needy.medibuddy.assistant;
 
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;

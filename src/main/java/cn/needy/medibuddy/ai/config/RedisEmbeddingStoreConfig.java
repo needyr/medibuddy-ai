@@ -1,4 +1,4 @@
-package cn.needy.javaai.config;
+package cn.needy.medibuddy.config;
 
 import dev.langchain4j.community.store.embedding.redis.RedisEmbeddingStore;
 import org.springframework.beans.factory.annotation.Value;

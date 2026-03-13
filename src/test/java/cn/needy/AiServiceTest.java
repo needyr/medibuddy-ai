@@ -1,6 +1,6 @@
-package cn.needy;
+package cn.needy.medibuddy;
 
-import cn.needy.javaai.assistant.Assistant;
+import cn.needy.medibuddy.ai.assistant.Assistant;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.service.AiServices;
 import org.junit.jupiter.api.Test;

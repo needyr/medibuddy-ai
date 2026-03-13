@@ -1,4 +1,4 @@
-package cn.needy;
+package cn.needy.medibuddy;
 
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import org.junit.jupiter.api.Test;

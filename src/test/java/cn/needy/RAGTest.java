@@ -1,4 +1,4 @@
-package cn.needy;
+package cn.needy.medibuddy;
 
 import dev.langchain4j.community.store.embedding.redis.RedisEmbeddingStore;
 import dev.langchain4j.data.document.Document;

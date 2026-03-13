@@ -1,9 +1,9 @@
-package cn.needy.javaai.controller;
+package cn.needy.medibuddy.controller;
 
-import cn.needy.javaai.assistant.MediBuddyAgent;
-import cn.needy.javaai.bean.ChatForm;
-import cn.needy.javaai.common.Result;
-import cn.needy.javaai.service.FileUploadService;
+import cn.needy.medibuddy.assistant.MediBuddyAgent;
+import cn.needy.medibuddy.bean.ChatForm;
+import cn.needy.medibuddy.common.Result;
+import cn.needy.medibuddy.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

@@ -1,8 +1,8 @@
-package cn.needy.javaai.service.impl;
+package cn.needy.medibuddy.service.impl;
 
-import cn.needy.javaai.entity.Appointment;
-import cn.needy.javaai.mapper.AppointmentMapper;
-import cn.needy.javaai.service.AppointmentService;
+import cn.needy.medibuddy.entity.Appointment;
+import cn.needy.medibuddy.mapper.AppointmentMapper;
+import cn.needy.medibuddy.service.AppointmentService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;

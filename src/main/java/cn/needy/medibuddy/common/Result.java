@@ -1,4 +1,4 @@
-package cn.needy.javaai.common;
+package cn.needy.medibuddy.common;
 
 import lombok.Data;
 

@@ -1,7 +1,7 @@
-package cn.needy;
+package cn.needy.medibuddy;
 
-import cn.needy.javaai.entity.Appointment;
-import cn.needy.javaai.service.AppointmentService;
+import cn.needy.medibuddy.entity.Appointment;
+import cn.needy.medibuddy.service.AppointmentService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
