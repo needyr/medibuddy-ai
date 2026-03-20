@@ -1,6 +1,6 @@
-package cn.needy.medibuddy.controller;
+package cn.needy.medibuddy.ai.controller;
 
-import cn.needy.medibuddy.assistant.MediBuddyAgent;
+import cn.needy.medibuddy.ai.assistant.MediBuddyAgent;
 import cn.needy.medibuddy.bean.ChatForm;
 import cn.needy.medibuddy.common.Result;
 import cn.needy.medibuddy.service.FileUploadService;
@@ -16,10 +16,10 @@ public class MediBuddyController {
     private final MediBuddyAgent mediBuddyAgent;
     private final FileUploadService fileUploadService;
 
-    @PostMapping("/chat")
-    public String chat(@RequestBody ChatForm chatForm) {
-        return mediBuddyAgent.chat(String.valueOf(chatForm.getMemoryId()), chatForm.getUserMessage());
-    }
+    // @PostMapping("/chat")
+    // public String chat(@RequestBody ChatForm chatForm) {
+    //     return mediBuddyAgent.chat(String.valueOf(chatForm.getMemoryId()), chatForm.getUserMessage());
+    // }
 
     @PostMapping("/upload")
     public Result<String> upload(@RequestParam("file")MultipartFile file) {

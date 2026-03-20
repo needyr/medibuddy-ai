@@ -4,6 +4,7 @@ import cn.needy.medibuddy.service.FileUploadService;
 import dev.langchain4j.community.store.embedding.redis.RedisEmbeddingStore;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.parser.TextDocumentParser;
+import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import lombok.RequiredArgsConstructor;
@@ -33,30 +34,29 @@ public class FileUploadServiceImpl implements FileUploadService {
     private static final String INGEST_FILE_HASH_KEY_PREFIX = "medibuddy:ingest:filename:";
     @Override
     public String uploadFile(MultipartFile file) {
-        // 创建向量存储
-        EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
-                .embeddingModel(embeddingModel)
-                .embeddingStore(store)
-                .build();
-
         TextDocumentParser parser = new TextDocumentParser();
-        Document document = null;
+        Document document;
         try {
             document = parser.parse(file.getInputStream());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        // 1. 去重：用文档内容的 MD5 比对
         String documentHash = md5(document.text());
-        String redisKey = INGEST_FILE_HASH_KEY_PREFIX + file.getName();
+        String redisKey = INGEST_FILE_HASH_KEY_PREFIX + file.getOriginalFilename();
         String storedHash = stringRedisTemplate.opsForValue().get(redisKey);
 
         if (documentHash.equals(storedHash)) {
             return "文件已存在";
         }
 
-        if (storedHash != null) {
-            stringRedisTemplate.delete(redisKey);
-        }
+        // 2. 构建 ingestor，加上分块策略
+        EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
+                .embeddingModel(embeddingModel)
+                .embeddingStore(store)
+                .documentSplitter(DocumentSplitters.recursive(500, 50))
+                .build();
 
         ingestor.ingest(document);
         stringRedisTemplate.opsForValue().set(redisKey, documentHash);

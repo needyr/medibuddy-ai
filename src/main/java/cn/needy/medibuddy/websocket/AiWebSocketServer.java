@@ -1,6 +1,6 @@
 package cn.needy.medibuddy.websocket;
 
-import cn.needy.medibuddy.assistant.MediBuddyAgent;
+import cn.needy.medibuddy.ai.assistant.MediBuddyAgent;
 import cn.needy.medibuddy.bean.ChatForm;
 import cn.needy.medibuddy.security.JwtService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,7 +20,14 @@ import org.springframework.stereotype.Component;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
 @RequiredArgsConstructor
@@ -37,6 +44,9 @@ public class AiWebSocketServer {
     private WebSocketServer server;
     // 并发安全的连接映射：userId -> WebSocket
     private final ConcurrentHashMap<Long, WebSocket> sessions = new ConcurrentHashMap<>();
+    // 每个连接仅保留一个活动流
+    private final Map<WebSocket, StreamContext> activeStreams = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
 
     @PostConstruct
     public void start() {
@@ -66,6 +76,7 @@ public class AiWebSocketServer {
                     // 断开时清理映射，避免内存泄漏
                     sessions.remove(userId, conn);
                 }
+                closeActiveStream(conn, "connection closed");
                 log.info("AI WebSocket connection closed: userId={} addr={} reason={}",
                         userId, conn.getRemoteSocketAddress(), reason);
             }
@@ -102,6 +113,8 @@ public class AiWebSocketServer {
             log.info("AI WebSocket server stopped");
         } catch (Exception e) {
             log.warn("Failed to stop AI WebSocket server: {}", e.getMessage());
+        } finally {
+            scheduler.shutdownNow();
         }
     }
 
@@ -129,16 +142,71 @@ public class AiWebSocketServer {
             return;
         }
 
+        // 文档式协议断言：start -> delta* -> end，error 终止且不发送 end
+        closeActiveStream(conn, "replaced by new request");
+        StreamContext context = new StreamContext(conn, form.getMemoryId());
+        activeStreams.put(conn, context);
+
+        WebSocket target = sessions.get(userId);
+        if (target == null) {
+            closeActiveStream(conn, "connection missing");
+            return;
+        }
+
+        send(target, AiChatResponse.start(form.getMemoryId()));
+        scheduleFlush(context);
+
         try {
-            String reply = mediBuddyAgent.chat(String.valueOf(form.getMemoryId()), form.getUserMessage());
-            WebSocket target = sessions.get(userId);
-            if (target != null) {
-                // 按 userId 查找连接并推送结果
-                send(target, AiChatResponse.ok(form.getMemoryId(), reply));
-            }
+            mediBuddyAgent.streamChat(String.valueOf(form.getMemoryId()), form.getUserMessage())
+                    .onPartialResponse(token -> {
+                        if (context.closed.get()) {
+                            return;
+                        }
+                        synchronized (context.buffer) {
+                            context.buffer.append(token);
+                            context.receivedChars += token.length();
+                        }
+                    })
+                    .onCompleteResponse(response -> {
+                        if (context.closed.compareAndSet(false, true)) {
+                            // 先取消定时刷新，避免重复发送
+                            cancelFlush(context);
+                            // 直接排空 buffer，不经过 flushBuffer 的 closed 守卫
+                            String remaining;
+                            synchronized (context.buffer) {
+                                remaining = context.buffer.toString();
+                                context.buffer.setLength(0);
+                            }
+                            if (!remaining.isEmpty()) {
+                                send(target, AiChatResponse.delta(form.getMemoryId(), remaining));
+                            }
+                            // 兜底：如果流式回调一个 token 都没收到，用完整响应补发
+                            if (remaining.isEmpty() && context.sentChars == 0) {
+                                String finalText = null;
+                                if (response != null && response.aiMessage() != null) {
+                                    finalText = response.aiMessage().text();
+                                }
+                                if (finalText != null && !finalText.isBlank()) {
+                                    send(target, AiChatResponse.delta(form.getMemoryId(), finalText));
+                                }
+                            }
+                            send(target, AiChatResponse.end(form.getMemoryId()));
+                        }
+                    })
+                    .onError(error -> {
+                        if (context.closed.compareAndSet(false, true)) {
+                            send(target, AiChatResponse.error(form.getMemoryId(), "AI service error"));
+                            cancelFlush(context);
+                        }
+                        log.warn("AI streaming failed for memoryId={}: {}", form.getMemoryId(), error.getMessage());
+                    })
+                    .start();
         } catch (Exception e) {
-            send(conn, AiChatResponse.error(form.getMemoryId(), "AI service error"));
-            log.warn("AI chat failed for memoryId={}: {}", form.getMemoryId(), e.getMessage());
+            if (context.closed.compareAndSet(false, true)) {
+                send(target, AiChatResponse.error(form.getMemoryId(), "AI service error"));
+                cancelFlush(context);
+            }
+            log.warn("AI stream start failed for memoryId={}: {}", form.getMemoryId(), e.getMessage());
         }
     }
 
@@ -191,19 +259,87 @@ public class AiWebSocketServer {
         return null;
     }
 
+    private void scheduleFlush(StreamContext context) {
+        long delayMs = 500 + ThreadLocalRandom.current().nextInt(0, 101);
+        context.flushFuture = scheduler.schedule(() -> {
+            flushBuffer(context);
+            if (!context.closed.get()) {
+                scheduleFlush(context);
+            }
+        }, delayMs, TimeUnit.MILLISECONDS);
+    }
+
+    private void flushBuffer(StreamContext context) {
+        if (context.closed.get()) {
+            return;
+        }
+        String delta;
+        synchronized (context.buffer) {
+            if (context.buffer.isEmpty()) {
+                return;
+            }
+            delta = context.buffer.toString();
+            context.buffer.setLength(0);
+            context.sentChars += delta.length();
+        }
+        send(context.conn, AiChatResponse.delta(context.memoryId, delta));
+    }
+
+    private void cancelFlush(StreamContext context) {
+        ScheduledFuture<?> future = context.flushFuture;
+        if (future != null) {
+            future.cancel(false);
+        }
+    }
+
+    private void closeActiveStream(WebSocket conn, String reason) {
+        StreamContext context = activeStreams.remove(conn);
+        if (context == null) {
+            return;
+        }
+        if (context.closed.compareAndSet(false, true)) {
+            cancelFlush(context);
+            log.info("AI stream closed: memoryId={} reason={}", context.memoryId, reason);
+        }
+    }
+
     @Data
     @AllArgsConstructor
     private static class AiChatResponse {
+        private String type; // start|delta|end|error
         private Long memoryId;
         private String assistantMessage;
         private String error;
 
-        static AiChatResponse ok(Long memoryId, String assistantMessage) {
-            return new AiChatResponse(memoryId, assistantMessage, null);
+        static AiChatResponse start(Long memoryId) {
+            return new AiChatResponse("start", memoryId, null, null);
+        }
+
+        static AiChatResponse delta(Long memoryId, String assistantMessage) {
+            return new AiChatResponse("delta", memoryId, assistantMessage, null);
+        }
+
+        static AiChatResponse end(Long memoryId) {
+            return new AiChatResponse("end", memoryId, null, null);
         }
 
         static AiChatResponse error(Long memoryId, String error) {
-            return new AiChatResponse(memoryId, null, error);
+            return new AiChatResponse("error", memoryId, null, error);
+        }
+    }
+
+    private static class StreamContext {
+        private final WebSocket conn;
+        private final Long memoryId;
+        private final StringBuilder buffer = new StringBuilder();
+        private final AtomicBoolean closed = new AtomicBoolean(false);
+        private volatile ScheduledFuture<?> flushFuture;
+        private int receivedChars = 0;
+        private int sentChars = 0;
+
+        private StreamContext(WebSocket conn, Long memoryId) {
+            this.conn = conn;
+            this.memoryId = memoryId;
         }
     }
 }

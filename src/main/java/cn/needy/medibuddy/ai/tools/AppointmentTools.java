@@ -1,4 +1,4 @@
-package cn.needy.medibuddy.tools;
+package cn.needy.medibuddy.ai.tools;
 
 import cn.needy.medibuddy.entity.Appointment;
 import cn.needy.medibuddy.service.AppointmentService;
